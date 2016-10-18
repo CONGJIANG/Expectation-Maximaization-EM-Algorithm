@@ -1,0 +1,81 @@
+clc;clear;
+ 
+p0=input('Enter p0 : ');
+mu1=input('Enter mu1 : ');
+mu2=input('Enter mu2: ');
+sigma1=input('Enter sigma1 : ');
+sigma2=input('Enter sigma2 : ');
+maxIter=input('Max number of allowable iteration: ');
+ 
+len=1000;
+X1=normrnd(mu1,sigma1,[1 len]);
+X2=normrnd(mu2, sigma2, [1 len]);
+X=ones(1,len);
+f1=normpdf(X,0,1);
+f2=normpdf(X,0,1);
+ 
+uRand=rand(len);
+for i=1:len
+    if uRand(i) < p0;
+    X(i)=X1(i);
+    else
+       X(i)=X2(i);
+    end
+end
+   
+iter=0;
+p_MLE=p0;
+mu1pre=mu1;
+mu2pre=mu2;
+sigma1pre=sigma1;
+sigma2pre=sigma2;
+ 
+ep=1e-10;
+   
+while 1
+    iter=iter +1;
+    z1=p0*f1./(p0*f1 + (1-p0)*f2);
+    p1=sum(z1)/len;
+    mu1next=dot(z1, X)/sum(z1);
+    mu2next=dot(1-z1, X)/sum(1-z1);
+    sigma1next=sqrt(dot(z1, (X-mu1pre).^2)/sum(z1));
+    sigma2next=sqrt(dot(1-z1, (X-mu2pre).^2)/sum(1-z1));
+    f1=normpdf(X, mu1next, sigma1next);
+    f2=normpdf(X, mu2next, sigma2next);
+  
+    if norm([p0;mu1pre; mu2pre; sigma1pre; sigma2pre]-[p1;mu1next; mu2next; sigma1next;sigma2next])<ep
+        p_MLE=p1;
+        mu1_MLE=mu1next;
+        mu2_MLE=mu2next;
+        sigma1_MLE=sigma1next;
+        sigma2_MLE=sigma2next;
+        break;
+    elseif iter>maxIter
+        p_MLE=p1;
+        mu1_MLE=mu1next;
+        mu2_MLE=mu2next;
+        sigma1_MLE=sigma1next;
+        sigma2_MLE=sigma2next;
+        warning( 'The algorithm did not converge');break;
+    else
+        p0=p1;
+        mu1pre=mu1next;
+        mu2pre=mu2next;
+        sigma1pre=sigma1next;
+        sigma2pre=sigma2next;
+    end       
+end
+disp('   ');
+disp('**********');
+disp('Number of iterations needed');
+disp(iter);
+disp('MLE for p is');
+disp(p_MLE);
+disp('MLE for mu1 is');
+disp(mu1_MLE);
+disp('MLE for mu2 is');
+disp(mu2_MLE);
+disp('MLE for sigma1 is');
+disp(sigma1_MLE);
+disp('MLE for sigma2 is');
+disp(sigma2_MLE);
